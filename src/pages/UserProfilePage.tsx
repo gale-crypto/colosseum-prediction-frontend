@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAppKitAccount } from '@reown/appkit/react'
 import { 
-  Copy, 
+  // Copy, 
   Settings, 
   Star, 
   DollarSign, 

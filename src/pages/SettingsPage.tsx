@@ -17,10 +17,10 @@ export default function SettingsPage() {
   const [username, setUsername] = useState(address ? `${address.slice(0, 4)}...${address.slice(-4)}` : '')
   const [avatar, setAvatar] = useState<string | null>(null)
 
-  const formatAddress = (addr: string | undefined) => {
-    if (!addr) return ''
-    return `${addr.slice(0, 4)}...${addr.slice(-4)}`
-  }
+  // const formatAddress = (addr: string | undefined) => {
+  //   if (!addr) return ''
+  //   return `${addr.slice(0, 4)}...${addr.slice(-4)}`
+  // }
 
   const handleAvatarUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]

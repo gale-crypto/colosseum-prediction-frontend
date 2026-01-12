@@ -24,7 +24,7 @@ const generatePageData = (page: number, itemsPerPage: number): LeaderboardEntry[
   ]
 
   const startRank = (page - 1) * itemsPerPage + 1
-  const endRank = page * itemsPerPage
+  // const endRank = page * itemsPerPage
 
   // Use a seeded random function for consistent data per page
   const seededRandom = (seed: number) => {
