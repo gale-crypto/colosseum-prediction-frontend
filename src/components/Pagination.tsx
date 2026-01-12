@@ -59,34 +59,34 @@ export default function Pagination({
   const endItem = Math.min(currentPage * itemsPerPage, totalItems || totalPages * itemsPerPage)
 
   return (
-    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6">
+    <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4 mt-4 sm:mt-6">
       {/* Items info */}
       {totalItems && (
-        <div className="text-sm text-muted-foreground">
+        <div className="text-xs sm:text-sm text-muted-foreground text-center sm:text-left">
           {startItem.toLocaleString()} - {endItem.toLocaleString()} of {totalItems.toLocaleString()} predictors
         </div>
       )}
 
       {/* Pagination controls */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1 sm:gap-2">
         {/* Previous button */}
         <button
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage === 1}
-          className="p-2 rounded-lg border border-border/50 bg-card hover:bg-muted/50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="p-1.5 sm:p-2 rounded-lg border border-border/50 bg-card hover:bg-muted/50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           aria-label="Previous page"
         >
-          <ChevronLeft className="w-5 h-5 text-foreground" />
+          <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5 text-foreground" />
         </button>
 
         {/* Page numbers */}
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-0.5 sm:gap-1 overflow-x-auto scrollbar-hide max-w-[calc(100vw-8rem)] sm:max-w-none">
           {getPageNumbers().map((page, index) => {
             if (page === '...') {
               return (
                 <span
                   key={`ellipsis-${index}`}
-                  className="px-2 py-1 text-muted-foreground"
+                  className="px-1.5 sm:px-2 py-1 text-muted-foreground text-xs sm:text-sm"
                 >
                   ...
                 </span>
@@ -98,7 +98,7 @@ export default function Pagination({
               <button
                 key={pageNum}
                 onClick={() => onPageChange(pageNum)}
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                className={`px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-colors whitespace-nowrap ${
                   currentPage === pageNum
                     ? 'bg-primary text-primary-foreground'
                     : 'bg-card border border-border/50 text-foreground hover:bg-muted/50'
@@ -114,10 +114,10 @@ export default function Pagination({
         <button
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
-          className="p-2 rounded-lg border border-border/50 bg-card hover:bg-muted/50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="p-1.5 sm:p-2 rounded-lg border border-border/50 bg-card hover:bg-muted/50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           aria-label="Next page"
         >
-          <ChevronRight className="w-5 h-5 text-foreground" />
+          <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-foreground" />
         </button>
       </div>
     </div>

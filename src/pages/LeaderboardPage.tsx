@@ -106,17 +106,18 @@ export default function LeaderboardPage() {
 
       {/* Leaderboard Table */}
       <div className="bg-card/90 border border-border/50 rounded-xl overflow-hidden backdrop-blur-sm">
-        <div className="overflow-x-auto">
+        {/* Desktop Table View */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full">
             <thead className="bg-muted/50 border-b border-border/50">
               <tr>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Rank</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Username</th>
-                <th className="px-6 py-4 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">$ Score</th>
-                <th className="px-6 py-4 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">Ref Score</th>
-                <th className="px-6 py-4 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">PTS Score</th>
-                <th className="px-6 py-4 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">Multiplier</th>
-                <th className="px-6 py-4 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">Total Score</th>
+                <th className="px-4 lg:px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Rank</th>
+                <th className="px-4 lg:px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Username</th>
+                <th className="px-4 lg:px-6 py-4 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">$ Score</th>
+                <th className="px-4 lg:px-6 py-4 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider hidden lg:table-cell">Ref Score</th>
+                <th className="px-4 lg:px-6 py-4 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider hidden lg:table-cell">PTS Score</th>
+                <th className="px-4 lg:px-6 py-4 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider hidden xl:table-cell">Multiplier</th>
+                <th className="px-4 lg:px-6 py-4 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">Total Score</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border/30">
@@ -125,53 +126,106 @@ export default function LeaderboardPage() {
                   key={entry.rank}
                   className={`hover:bg-muted/30 transition-colors ${getRankBg(entry.rank)}`}
                 >
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-4 lg:px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center gap-2">
                       {getRankIcon(entry.rank)}
                       <span className="font-semibold text-foreground">{entry.rank}</span>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center gap-3">
+                  <td className="px-4 lg:px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center gap-2 sm:gap-3">
                       {entry.profilePicture ? (
                         <img
                           src={entry.profilePicture}
                           alt={entry.username}
-                          className="w-8 h-8 rounded-full"
+                          className="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex-shrink-0"
                         />
                       ) : (
-                        <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
+                        <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
                           <span className="text-xs font-medium text-primary">
                             {entry.username.charAt(0).toUpperCase()}
                           </span>
                         </div>
                       )}
-                      <span className="font-medium text-foreground">
+                      <span className="font-medium text-foreground truncate max-w-[120px] sm:max-w-none">
                         {entry.username.length > 20
                           ? `${entry.username.slice(0, 20)}...`
                           : entry.username}
                       </span>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right font-medium text-foreground">
+                  <td className="px-4 lg:px-6 py-4 whitespace-nowrap text-right font-medium text-foreground text-sm">
                     {formatNumber(entry.score)}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right font-medium text-foreground">
+                  <td className="px-4 lg:px-6 py-4 whitespace-nowrap text-right font-medium text-foreground text-sm hidden lg:table-cell">
                     {formatNumber(entry.refScore)}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right font-medium text-foreground">
+                  <td className="px-4 lg:px-6 py-4 whitespace-nowrap text-right font-medium text-foreground text-sm hidden lg:table-cell">
                     {formatNumber(entry.ptsScore)}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right font-medium text-foreground">
+                  <td className="px-4 lg:px-6 py-4 whitespace-nowrap text-right font-medium text-foreground text-sm hidden xl:table-cell">
                     {entry.multiplier}x
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right font-bold text-primary">
+                  <td className="px-4 lg:px-6 py-4 whitespace-nowrap text-right font-bold text-primary text-sm">
                     {formatNumber(entry.totalScore)}
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile Card View */}
+        <div className="md:hidden divide-y divide-border/30">
+          {currentPageData.map((entry) => (
+            <div
+              key={entry.rank}
+              className={`p-4 ${getRankBg(entry.rank)}`}
+            >
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-3">
+                  {getRankIcon(entry.rank)}
+                  <span className="font-semibold text-foreground text-lg">{entry.rank}</span>
+                  {entry.profilePicture ? (
+                    <img
+                      src={entry.profilePicture}
+                      alt={entry.username}
+                      className="w-10 h-10 rounded-full"
+                    />
+                  ) : (
+                    <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+                      <span className="text-sm font-medium text-primary">
+                        {entry.username.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                  )}
+                  <span className="font-medium text-foreground truncate max-w-[140px]">
+                    {entry.username.length > 15
+                      ? `${entry.username.slice(0, 15)}...`
+                      : entry.username}
+                  </span>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div>
+                  <div className="text-xs text-muted-foreground mb-1">$ Score</div>
+                  <div className="font-medium text-foreground">{formatNumber(entry.score)}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-muted-foreground mb-1">Total Score</div>
+                  <div className="font-bold text-primary">{formatNumber(entry.totalScore)}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-muted-foreground mb-1">Ref Score</div>
+                  <div className="font-medium text-foreground">{formatNumber(entry.refScore)}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-muted-foreground mb-1">PTS Score</div>
+                  <div className="font-medium text-foreground">{formatNumber(entry.ptsScore)}</div>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 

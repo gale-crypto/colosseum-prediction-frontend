@@ -42,11 +42,11 @@ export default function SettingsPage() {
 
   return (
     <div className="max-w-8xl mx-auto">
-      <div className="flex flex-col lg:flex-row gap-6">
+      <div className="flex flex-col lg:flex-row gap-4 sm:gap-6">
         {/* Sidebar */}
         <div className="w-full lg:w-64 flex-shrink-0">
-          <div className="bg-card border border-border/50 rounded-2xl p-4">
-            <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-4">
+          <div className="bg-card border border-border/50 rounded-2xl p-3 sm:p-4">
+            <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 sm:mb-4">
               SETTINGS
             </h2>
             <nav className="space-y-1">
@@ -56,14 +56,14 @@ export default function SettingsPage() {
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-full transition-colors text-left ${
+                    className={`w-full flex items-center gap-2 sm:gap-3 px-2 sm:px-3 py-2 sm:py-2.5 rounded-full transition-colors text-left ${
                       activeTab === tab.id
                         ? 'bg-muted text-foreground'
                         : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
                     }`}
                   >
-                    <Icon className="w-5 h-5" />
-                    <span className="text-sm font-medium">{tab.label}</span>
+                    <Icon className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+                    <span className="text-xs sm:text-sm font-medium">{tab.label}</span>
                   </button>
                 )
               })}
@@ -73,30 +73,30 @@ export default function SettingsPage() {
 
         {/* Content Area */}
         <div className="flex-1">
-          <div className="bg-card border border-border/50 rounded-2xl p-6 lg:p-8">
+          <div className="bg-card border border-border/50 rounded-2xl p-4 sm:p-6 lg:p-8">
             {/* Profile Tab */}
             {activeTab === 'profile' && (
-              <div className="space-y-8">
+              <div className="space-y-6 sm:space-y-8">
                 <div>
-                  <h1 className="text-3xl font-bold text-foreground mb-2">Profile</h1>
-                  <p className="text-muted-foreground">Manage your profile and preferences here.</p>
+                  <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">Profile</h1>
+                  <p className="text-sm sm:text-base text-muted-foreground">Manage your profile and preferences here.</p>
                 </div>
 
                 {/* Avatar Section */}
-                <div className="space-y-4">
-                  <h2 className="text-lg font-semibold text-foreground">Avatar</h2>
-                  <div className="flex items-start gap-6">
-                    <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 flex items-center justify-center text-white text-2xl font-semibold flex-shrink-0 overflow-hidden">
+                <div className="space-y-3 sm:space-y-4">
+                  <h2 className="text-base sm:text-lg font-semibold text-foreground">Avatar</h2>
+                  <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-6">
+                    <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 flex items-center justify-center text-white text-xl sm:text-2xl font-semibold flex-shrink-0 overflow-hidden">
                       {avatar ? (
                         <img src={avatar} alt="Avatar" className="w-full h-full object-cover" />
                       ) : (
                         address?.charAt(2).toUpperCase() || 'U'
                       )}
                     </div>
-                    <div className="flex-1">
-                      <label className="inline-flex items-center gap-2 px-4 py-2 bg-muted/50 hover:bg-muted border border-border/50 rounded-full cursor-pointer transition-colors">
+                    <div className="flex-1 w-full sm:w-auto">
+                      <label className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-muted/50 hover:bg-muted border border-border/50 rounded-full cursor-pointer transition-colors">
                         <Upload className="w-4 h-4 text-muted-foreground" />
-                        <span className="text-sm font-medium text-foreground">Upload</span>
+                        <span className="text-xs sm:text-sm font-medium text-foreground">Upload</span>
                         <input
                           type="file"
                           accept="image/jpeg,image/jpg,image/gif,image/png"
@@ -139,51 +139,51 @@ export default function SettingsPage() {
 
             {/* Connections Tab */}
             {activeTab === 'connections' && (
-              <div className="space-y-8">
+              <div className="space-y-6 sm:space-y-8">
                 <div>
-                  <h1 className="text-3xl font-bold text-foreground mb-2">Connections</h1>
-                  <p className="text-muted-foreground">Manage your connections here.</p>
+                  <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">Connections</h1>
+                  <p className="text-sm sm:text-base text-muted-foreground">Manage your connections here.</p>
                 </div>
 
-                <div className="space-y-4">
+                <div className="space-y-3 sm:space-y-4">
                   {/* Email Connection */}
-                  <div className="p-4 border border-border/50 rounded-lg">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="text-lg font-semibold text-foreground mb-1">Connect email</h3>
-                        <p className="text-sm text-muted-foreground">Connect your email</p>
+                  <div className="p-3 sm:p-4 border border-border/50 rounded-lg">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-base sm:text-lg font-semibold text-foreground mb-1">Connect email</h3>
+                        <p className="text-xs sm:text-sm text-muted-foreground">Connect your email</p>
                       </div>
-                      <button className="flex items-center gap-2 px-4 py-2 bg-muted/50 hover:bg-muted border border-border/50 rounded-full transition-colors">
+                      <button className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-muted/50 hover:bg-muted border border-border/50 rounded-full transition-colors flex-shrink-0">
                         <Mail className="w-4 h-4 text-foreground" />
-                        <span className="text-sm font-medium text-foreground">Connect</span>
+                        <span className="text-xs sm:text-sm font-medium text-foreground">Connect</span>
                       </button>
                     </div>
                   </div>
 
                   {/* X (Twitter) Connection */}
-                  <div className="p-4 border border-border/50 rounded-lg">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="text-lg font-semibold text-foreground mb-1">Connect X (Twitter)</h3>
-                        <p className="text-sm text-muted-foreground">Connect X to your account</p>
+                  <div className="p-3 sm:p-4 border border-border/50 rounded-lg">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-base sm:text-lg font-semibold text-foreground mb-1">Connect X (Twitter)</h3>
+                        <p className="text-xs sm:text-sm text-muted-foreground">Connect X to your account</p>
                       </div>
-                      <button className="flex items-center gap-2 px-4 py-2 bg-muted/50 hover:bg-muted border border-border/50 rounded-full transition-colors">
+                      <button className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-muted/50 hover:bg-muted border border-border/50 rounded-full transition-colors flex-shrink-0">
                         <XIcon className="w-4 h-4 text-foreground" />
-                        <span className="text-sm font-medium text-foreground">Connect</span>
+                        <span className="text-xs sm:text-sm font-medium text-foreground">Connect</span>
                       </button>
                     </div>
                   </div>
 
                   {/* Telegram Connection */}
-                  <div className="p-4 border border-border/50 rounded-lg">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="text-lg font-semibold text-foreground mb-1">Connect Telegram</h3>
-                        <p className="text-sm text-muted-foreground">Connect Telegram to your account</p>
+                  <div className="p-3 sm:p-4 border border-border/50 rounded-lg">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-base sm:text-lg font-semibold text-foreground mb-1">Connect Telegram</h3>
+                        <p className="text-xs sm:text-sm text-muted-foreground">Connect Telegram to your account</p>
                       </div>
-                      <button className="flex items-center gap-2 px-4 py-2 bg-muted/50 hover:bg-muted border border-border/50 rounded-full transition-colors">
+                      <button className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-muted/50 hover:bg-muted border border-border/50 rounded-full transition-colors flex-shrink-0">
                         <Send className="w-4 h-4 text-foreground" />
-                        <span className="text-sm font-medium text-foreground">Connect</span>
+                        <span className="text-xs sm:text-sm font-medium text-foreground">Connect</span>
                       </button>
                     </div>
                   </div>
@@ -193,14 +193,14 @@ export default function SettingsPage() {
 
             {/* Wallets Tab */}
             {activeTab === 'wallets' && (
-              <div className="space-y-8">
+              <div className="space-y-6 sm:space-y-8">
                 <div>
-                  <h1 className="text-3xl font-bold text-foreground mb-2">Wallets</h1>
-                  <p className="text-muted-foreground">Add one or more wallets to your account.</p>
+                  <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">Wallets</h1>
+                  <p className="text-sm sm:text-base text-muted-foreground">Add one or more wallets to your account.</p>
                 </div>
 
-                <div className="flex justify-center py-12">
-                  <button className="px-6 py-3 bg-primary hover:bg-primary/90 text-primary-foreground font-medium rounded-lg transition-colors">
+                <div className="flex justify-center py-8 sm:py-12">
+                  <button className="px-5 sm:px-6 py-2.5 sm:py-3 bg-primary hover:bg-primary/90 text-primary-foreground text-sm sm:text-base font-medium rounded-lg transition-colors">
                     Link Wallet
                   </button>
                 </div>
@@ -209,14 +209,14 @@ export default function SettingsPage() {
 
             {/* Advanced Tab */}
             {activeTab === 'advanced' && (
-              <div className="space-y-8">
+              <div className="space-y-6 sm:space-y-8">
                 <div>
-                  <h1 className="text-3xl font-bold text-foreground mb-2">Advanced</h1>
-                  <p className="text-muted-foreground">Manage your advanced settings here.</p>
+                  <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">Advanced</h1>
+                  <p className="text-sm sm:text-base text-muted-foreground">Manage your advanced settings here.</p>
                 </div>
 
-                <div className="flex justify-center py-12">
-                  <p className="text-muted-foreground">
+                <div className="flex justify-center py-8 sm:py-12">
+                  <p className="text-sm sm:text-base text-muted-foreground text-center px-4">
                     No advanced settings available for your wallet.
                   </p>
                 </div>

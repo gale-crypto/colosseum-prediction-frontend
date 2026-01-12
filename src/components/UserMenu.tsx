@@ -66,7 +66,7 @@ export default function UserMenu() {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 top-full mt-2 w-80 bg-card border border-border/50 rounded-2xl shadow-xl z-50 overflow-hidden">
+        <div className="absolute right-0 top-full mt-2 w-[calc(100vw-2rem)] sm:w-80 max-w-sm bg-card border border-border/50 rounded-2xl shadow-xl z-50 overflow-hidden">
           {/* Profile Card */}
           <div className="p-4 bg-muted/30 border-b border-border/30">
             <div className="flex items-center gap-3 mb-3">
