@@ -127,13 +127,13 @@
 
   .market-card-bg {
     background: url('/images/markets/ex-market-card-img.webp');
-    background-size: contain;
+    background-size: cover;
     background-repeat: no-repeat;
     background-position: center;
   }
 
   .colosseum-bg {
-    background-image: url('/images/colosseum-bg.png');
+    background-image: url('/images/background.png');
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
@@ -145,5 +145,14 @@
 
   .bg-overlay-overlay {
     background-color: var(--overlay-overlay);
+  }
+
+  @media screen and (max-width: 640px) {
+    .colosseum-bg {
+      background-image: url('/images/sm-background.png');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+    }
   }
 }

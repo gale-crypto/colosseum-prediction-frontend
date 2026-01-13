@@ -14,8 +14,8 @@ export default function Layout({ children }: LayoutProps) {
   return (
     <div className="min-h-screen flex flex-col relative">
       {/* Background */}
-      <div className="fixed inset-0 z-0 colosseum-bg opacity-20"></div>
       <div className="fixed inset-0 z-0 bg-background"></div>
+      <div className="fixed inset-0 z-0 colosseum-bg"></div>      
       
       <div className="relative z-10 flex min-h-screen">
         <Sidebar 

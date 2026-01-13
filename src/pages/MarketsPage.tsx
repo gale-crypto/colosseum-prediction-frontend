@@ -98,7 +98,7 @@ export default function MarketsPage() {
     <div className="max-w-8xl mx-auto">
       {/* Category Cards Section */}
       <div className="mb-8 relative overflow-hidden rounded-2xl bg-muted/50">
-        <div className="flex 2xl:grid 2xl:grid-cols-7 gap-3 p-2 overflow-x-auto 2xl:overflow-hidden scrollbar-hide">
+        <div className="flex 2xl:grid 2xl:grid-cols-7 gap-2 p-2 overflow-x-auto 2xl:overflow-hidden scrollbar-hide">
           {categoryCards.map((category) => (
             <CategoryCard
               key={category.name}
@@ -191,7 +191,7 @@ export default function MarketsPage() {
 
       {/* Markets Grid */}
       {filteredMarkets.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 3xl:grid-cols-4 gap-4 sm:gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 3xl:grid-cols-4 gap-4 sm:gap-6">
           {filteredMarkets.map(market => (
             <MarketCard key={market.id} market={market} />
           ))}
