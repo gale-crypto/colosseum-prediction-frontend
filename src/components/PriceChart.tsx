@@ -2,21 +2,24 @@ import { useEffect, useRef } from 'react'
 import { createChart, LineSeries, type IChartApi, type ISeriesApi, type LineData, type Time } from 'lightweight-charts'
 
 interface PriceChartProps {
-  data: { time: Time; value: number }[]
+  upData: { time: Time; value: number }[]
+  downData: { time: Time; value: number }[]
   upColor?: string
   downColor?: string
   height?: number
 }
 
 export default function PriceChart({ 
-  data, 
-  upColor = '#e99b2a', // primary color
-  downColor = '#c97847', // secondary color
+  upData,
+  downData,
+  upColor = '#FF68B3', // primary color
+  downColor = '#3FDECC', // secondary color
   height = 400 
 }: PriceChartProps) {
   const chartContainerRef = useRef<HTMLDivElement>(null)
   const chartRef = useRef<IChartApi | null>(null)
-  const seriesRef = useRef<ISeriesApi<'Line'> | null>(null)
+  const upSeriesRef = useRef<ISeriesApi<'Line'> | null>(null)
+  const downSeriesRef = useRef<ISeriesApi<'Line'> | null>(null)
 
   useEffect(() => {
     if (!chartContainerRef.current) return
@@ -48,14 +51,28 @@ export default function PriceChart({
         timeVisible: true,
         secondsVisible: false,
       },
+      // Disable all interactions (panning, zooming, scaling)
+      handleScroll: {
+        mouseWheel: false,
+        pressedMouseMove: false,
+        horzTouchDrag: false,
+        vertTouchDrag: false,
+      },
+      handleScale: {
+        axisPressedMouseMove: false,
+        axisDoubleClickReset: false,
+        mouseWheel: false,
+        pinch: false,
+      },
     })
 
     chartRef.current = chart
 
-    // Create line series
-    const lineSeries = chart.addSeries(LineSeries, {
+    // Create UP line series
+    const upSeries = chart.addSeries(LineSeries, {
       color: upColor,
       lineWidth: 2,
+      title: 'UP',
       priceFormat: {
         type: 'price',
         precision: 2,
@@ -63,10 +80,24 @@ export default function PriceChart({
       },
     })
 
-    seriesRef.current = lineSeries
+    // Create DOWN line series
+    const downSeries = chart.addSeries(LineSeries, {
+      color: downColor,
+      lineWidth: 2,
+      title: 'DOWN',
+      priceFormat: {
+        type: 'price',
+        precision: 2,
+        minMove: 0.01,
+      },
+    })
+
+    upSeriesRef.current = upSeries
+    downSeriesRef.current = downSeries
 
     // Set data
-    lineSeries.setData(data as LineData[])
+    upSeries.setData(upData as LineData[])
+    downSeries.setData(downData as LineData[])
 
     // Handle resize
     const handleResize = () => {
@@ -86,13 +117,19 @@ export default function PriceChart({
         chartRef.current = null
       }
     }
-  }, [data, height, upColor, downColor])
+  }, [height, upColor, downColor])
 
   useEffect(() => {
-    if (seriesRef.current && data.length > 0) {
-      seriesRef.current.setData(data as LineData[])
+    if (upSeriesRef.current && upData.length > 0) {
+      upSeriesRef.current.setData(upData as LineData[])
     }
-  }, [data])
+  }, [upData])
+
+  useEffect(() => {
+    if (downSeriesRef.current && downData.length > 0) {
+      downSeriesRef.current.setData(downData as LineData[])
+    }
+  }, [downData])
 
   return (
     <div className="w-full">
@@ -100,4 +137,3 @@ export default function PriceChart({
     </div>
   )
 }
-

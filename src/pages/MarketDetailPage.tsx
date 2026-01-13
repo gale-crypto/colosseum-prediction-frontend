@@ -74,10 +74,14 @@ const mockComments: Comment[] = [
   }
 ]
 
-// Generate mock price history data
-const generatePriceData = (timeFilter: string): { time: Time; value: number }[] => {
+// Generate mock price history data for UP and DOWN
+const generatePriceData = (timeFilter: string): { 
+  upData: { time: Time; value: number }[]
+  downData: { time: Time; value: number }[]
+} => {
   const now = Date.now()
-  const data: { time: Time; value: number }[] = []
+  const upData: { time: Time; value: number }[] = []
+  const downData: { time: Time; value: number }[] = []
   let startTime: number
   let interval: number
 
@@ -100,18 +104,31 @@ const generatePriceData = (timeFilter: string): { time: Time; value: number }[] 
       break
   }
 
-  let currentPrice = 0.55
+  let currentUpPrice = 0.60 // Start around 60%
+  let currentDownPrice = 0.40 // Start around 40%
+  
   for (let time = startTime; time <= now; time += interval) {
-    // Random walk with slight upward bias
-    currentPrice += (Math.random() - 0.45) * 0.02
-    currentPrice = Math.max(0.1, Math.min(0.9, currentPrice))
-    data.push({
-      time: Math.floor(time / 1000) as Time,
-      value: currentPrice * 100
+    const timestamp = Math.floor(time / 1000) as Time
+    
+    // Random walk for UP price (slight upward bias)
+    currentUpPrice += (Math.random() - 0.45) * 0.02
+    currentUpPrice = Math.max(0.1, Math.min(0.9, currentUpPrice))
+    
+    // DOWN price is inverse of UP (they should sum to ~100%)
+    currentDownPrice = 1 - currentUpPrice
+    
+    upData.push({
+      time: timestamp,
+      value: currentUpPrice * 100
+    })
+    
+    downData.push({
+      time: timestamp,
+      value: currentDownPrice * 100
     })
   }
 
-  return data
+  return { upData, downData }
 }
 
 export default function MarketDetailPage() {
@@ -122,7 +139,7 @@ export default function MarketDetailPage() {
   const [buySellMode, setBuySellMode] = useState<'buy' | 'sell'>('buy')
   const [selectedSide, setSelectedSide] = useState<'up' | 'down' | null>(null)
 
-  const chartData = useMemo(() => generatePriceData(selectedTimeFilter), [selectedTimeFilter])
+  const { upData, downData } = useMemo(() => generatePriceData(selectedTimeFilter), [selectedTimeFilter])
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
@@ -182,8 +199,16 @@ export default function MarketDetailPage() {
             {market.question}
           </h1>
 
-          <div className="text-lg sm:text-xl font-semibold text-muted-foreground mb-6">
-            {formatVolume(market.volume)} Perpetual market
+          <div className="flex items-center gap-1.5 mb-6">
+            <div className="text-sm font-semibold text-muted-foreground flex items-center gap-1.5 ">
+              <img src="/images/usdt-logo.png" alt="Volume" width={15} height={15} />
+              {formatVolume(market.volume)}
+            </div>
+            <div className="border border-l border-white h-3"/>
+            <div className="text-sm font-semibold text-muted-foreground flex items-center gap-1.5">
+              <Clock className="w-4 h-4" />
+              Perpetual market
+            </div>
           </div>
 
           {/* Probability Display */}
@@ -227,7 +252,7 @@ export default function MarketDetailPage() {
 
           {/* Price Chart */}
           <div className="bg-card/90 border border-border/50 rounded-xl p-6 card-shadow backdrop-blur-sm mb-6">
-            <PriceChart data={chartData} height={400} />
+            <PriceChart upData={upData} downData={downData} height={400} />
           </div>
 
           {/* Stats Grid */}
@@ -451,14 +476,14 @@ export default function MarketDetailPage() {
 
         {/* Right Column - Trading Interface */}
         <div className="lg:col-span-1">
-          <div className="bg-card/90 border border-border/50 rounded-xl p-6 card-shadow backdrop-blur-sm sticky top-24">
-            {/* Buy/Sell Toggle */}
-            <div className="flex gap-2 mb-6 bg-muted/50 p-1 rounded-lg">
+          <div className="w-full py-4 bg-card/90 border border-border/50 pb-6 relative overflow-hidden px-4 md:px-4 pt-3 hidden md:block my-4 rounded-none sm:rounded-3xl sm:my-0 card-shadow backdrop-blur-sm sticky">
+            {/* Buy/Sell Header */}
+            <div className="flex items-center gap-2 mb-6">
               <button
                 onClick={() => setBuySellMode('buy')}
-                className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+                className={`px-3 py-1.5 text-sm font-medium transition-colors ${
                   buySellMode === 'buy'
-                    ? 'bg-primary text-primary-foreground'
+                    ? 'text-foreground border-b-2 border-primary'
                     : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
@@ -466,9 +491,9 @@ export default function MarketDetailPage() {
               </button>
               <button
                 onClick={() => setBuySellMode('sell')}
-                className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+                className={`px-3 py-1.5 text-sm font-medium transition-colors ${
                   buySellMode === 'sell'
-                    ? 'bg-primary text-primary-foreground'
+                    ? 'text-foreground border-b-2 border-primary'
                     : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
@@ -478,7 +503,7 @@ export default function MarketDetailPage() {
 
             {/* Percentage Display */}
             <div className="mb-6">
-              <div className="flex h-3 bg-muted/50 rounded-full overflow-hidden mb-2">
+              <div className="flex h-2.5 bg-muted/50 rounded-full overflow-hidden mb-2">
                 <div
                   className="bg-gradient-to-r from-primary to-primary/80 transition-all"
                   style={{ width: `${market.yesPrice * 100}%` }}
@@ -488,64 +513,99 @@ export default function MarketDetailPage() {
                   style={{ width: `${market.noPrice * 100}%` }}
                 />
               </div>
-              <div className="flex justify-between text-sm font-semibold">
+              <div className="flex justify-between text-base font-semibold">
                 <span className="text-primary">{(market.yesPrice * 100).toFixed(0)}%</span>
                 <span className="text-secondary">{(market.noPrice * 100).toFixed(0)}%</span>
               </div>
             </div>
 
             {/* Trading Buttons */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold gelio-font mb-4">Pick a side</h3>
-              
-              <button
-                onClick={() => setSelectedSide(selectedSide === 'up' ? null : 'up')}
-                className={`w-full py-4 rounded-lg font-semibold text-lg transition-all flex items-center justify-center gap-2 ${
-                  selectedSide === 'up'
-                    ? 'gold-button'
-                    : 'gold-button opacity-70 hover:opacity-100'
-                }`}
-              >
-                <TrendingUp className="w-5 h-5" />
-                UP
-              </button>
-              
-              <button
-                onClick={() => setSelectedSide(selectedSide === 'down' ? null : 'down')}
-                className={`w-full py-4 rounded-lg font-semibold text-lg transition-all flex items-center justify-center gap-2 ${
-                  selectedSide === 'down'
-                    ? 'bg-gradient-to-br from-secondary to-secondary/80 text-secondary-foreground border-2 border-secondary'
-                    : 'bg-gradient-to-br from-secondary/60 to-secondary/40 text-secondary-foreground border border-secondary/30 opacity-70 hover:opacity-100'
-                }`}
-              >
-                <TrendingUp className="w-5 h-5 rotate-180" />
-                DOWN
-              </button>
+            <div className="space-y-3">
+              <h3 className="text-base font-semibold gelio-font mb-3">Pick a side</h3>
+              <div className='grid grid-cols-2 gap-2'>
+                <button
+                  onClick={() => setSelectedSide(selectedSide === 'up' ? null : 'up')}
+                  className={`w-full py-3.5 rounded-lg font-semibold text-base transition-all ${
+                    selectedSide === 'up'
+                      ? 'gold-button'
+                      : 'gold-button opacity-60 hover:opacity-100'
+                  }`}
+                >
+                  UP
+                </button>
+                
+                <button
+                  onClick={() => setSelectedSide(selectedSide === 'down' ? null : 'down')}
+                  className={`w-full py-3.5 rounded-lg font-semibold text-base transition-all ${
+                    selectedSide === 'down'
+                      ? 'bg-gradient-to-br from-secondary to-secondary/80 text-secondary-foreground border-2 border-secondary'
+                      : 'bg-gradient-to-br from-secondary/60 to-secondary/40 text-secondary-foreground border border-secondary/30 opacity-60 hover:opacity-100'
+                  }`}
+                >
+                  DOWN
+                </button>
+              </div>
 
               {selectedSide && (
-                <div className="pt-4 border-t border-border/30 space-y-3">
+                <div className="pt-4 border-t border-border/30 space-y-3 mt-4">
                   <div>
-                    <label className="text-xs text-muted-foreground mb-1 block">Amount</label>
-                    <input
-                      type="number"
-                      placeholder="0.00"
-                      className="w-full bg-muted/50 border border-border/50 rounded-lg px-4 py-2 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
-                    />
+                    <label className="text-xs text-muted-foreground mb-1.5 block">Amount</label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
+                      <input
+                        type="number"
+                        placeholder="0.00"
+                        className="w-full bg-muted/50 border border-border/50 rounded-lg pl-7 pr-4 py-2.5 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm"
+                      />
+                    </div>
                   </div>
-                  <button className="w-full bg-primary text-primary-foreground py-3 rounded-lg font-semibold hover:opacity-90 transition-opacity">
+                  <button className="w-full bg-primary text-primary-foreground py-2.5 rounded-lg font-semibold hover:opacity-90 transition-opacity text-sm">
                     {buySellMode === 'buy' ? 'Buy' : 'Sell'} {selectedSide.toUpperCase()}
                   </button>
                 </div>
               )}
 
               {!selectedSide && (
-                <div className="pt-4 border-t border-border/30">
+                <div className="pt-4 border-t border-border/30 mt-4">
                   <p className="text-xs text-muted-foreground text-center">
-                    {buySellMode === 'buy' ? 'Select UP or DOWN to buy shares' : 'Select UP or DOWN to sell shares'}
+                    Unavailable
                   </p>
                 </div>
               )}
             </div>
+
+            {/* Login Section */}
+            {/* <div className="mt-6 pt-4 border-t border-border/30">
+              <button className="w-full bg-primary text-primary-foreground py-2.5 rounded-lg font-semibold hover:opacity-90 transition-opacity text-sm">
+                Login
+              </button>
+            </div> */}
+
+            {/* Trading Details */}
+            {selectedSide && (
+              <div className="mt-6 pt-4 border-t border-border/30 space-y-3">
+                <div className="flex justify-between text-xs">
+                  <span className="text-muted-foreground">Price change</span>
+                  <span className="text-foreground font-medium">+0.00%</span>
+                </div>
+                <div className="flex justify-between text-xs">
+                  <span className="text-muted-foreground">Shares</span>
+                  <span className="text-foreground font-medium">0</span>
+                </div>
+                <div className="flex justify-between text-xs">
+                  <span className="text-muted-foreground">Avg. price</span>
+                  <span className="text-foreground font-medium">$0.00</span>
+                </div>
+                <div className="flex justify-between text-xs">
+                  <span className="text-muted-foreground">Max profit</span>
+                  <span className="text-foreground font-medium">$0.00</span>
+                </div>
+                <div className="flex justify-between text-xs">
+                  <span className="text-muted-foreground">Max payout</span>
+                  <span className="text-foreground font-medium">$0.00</span>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Timeline */}

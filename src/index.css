@@ -43,6 +43,8 @@
   --ring: oklch(0.75 0.15 70);
   --radius: 0.75rem;
   --overlay-overlay: rgba(0, 0, 0, 0.5);
+  --color-down: #FF68B3;
+  --color-up: #3FDECC;
 }
 
 @theme {
