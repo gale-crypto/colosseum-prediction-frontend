@@ -2,15 +2,19 @@ import { Link } from 'react-router-dom'
 
 interface CategoryCardProps {
   name: string
+  slug: string
   image?: string
   gradient: string
+  isActive?: boolean
 }
 
-export default function CategoryCard({ name, image, gradient }: CategoryCardProps) {
+export default function CategoryCard({ name, slug, image, gradient, isActive = false }: CategoryCardProps) {
   return (
     <Link
-      to={`/markets?category=${name.toLowerCase()}`}
-      className="category-card relative group flex-shrink-0 w-[calc(19%-9.6px)] 2xl:w-full rounded-2xl overflow-hidden cursor-pointer transition-transform hover:scale-105 flex flex-col items-center"
+      to={`/markets?category=${slug}`}
+      className={`category-card relative group flex-shrink-0 w-[calc(19%-9.6px)] 2xl:w-full rounded-2xl overflow-hidden cursor-pointer transition-transform hover:scale-105 flex flex-col items-center ${
+        isActive ? 'ring-2 ring-primary' : ''
+      }`}
     >
       <div className="py-2 px-3 xl:px-4 w-full">
         <h3 

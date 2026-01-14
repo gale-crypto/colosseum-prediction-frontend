@@ -7,6 +7,8 @@ import EarnPage from './pages/EarnPage'
 import NewsPage from './pages/NewsPage'
 import UserProfilePage from './pages/UserProfilePage'
 import SettingsPage from './pages/SettingsPage'
+import AdminPage from './pages/AdminPage'
+import CreateMarketPage from './pages/CreateMarketPage'
 import { createAppKit } from '@reown/appkit/react'
 import { metadata, networks, projectId, solanaWeb3JsAdapter } from './config'
 import { solana } from '@reown/appkit/networks'
@@ -35,6 +37,9 @@ function App() {
           <Route path="/news" element={<NewsPage />} />
           <Route path="/profile" element={<UserProfilePage />} />
           <Route path="/settings" element={<SettingsPage />} />
+          {/* <Route path="/admin" element={<AdminPage />} /> */}
+          <Route path="/create-market" element={<CreateMarketPage />} />
+          <Route path="/admin/markets/new" element={<AdminPage />} />
         </Routes>
       </Layout>
     </Router>

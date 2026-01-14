@@ -50,6 +50,10 @@ export default function PriceChart({
         borderColor: '#4e341f4d',
         timeVisible: true,
         secondsVisible: false,
+        rightOffset: 10,
+        barSpacing: 3,
+        fixLeftEdge: false,
+        fixRightEdge: false,
       },
       // Disable all interactions (panning, zooming, scaling)
       handleScroll: {
@@ -95,9 +99,20 @@ export default function PriceChart({
     upSeriesRef.current = upSeries
     downSeriesRef.current = downSeries
 
-    // Set data
-    upSeries.setData(upData as LineData[])
-    downSeries.setData(downData as LineData[])
+    // Set initial data
+    if (upData.length > 0) {
+      upSeries.setData(upData as LineData[])
+    }
+    if (downData.length > 0) {
+      downSeries.setData(downData as LineData[])
+    }
+
+    // Fit content to show all data after chart is ready
+    if (upData.length > 0 || downData.length > 0) {
+      setTimeout(() => {
+        chart.timeScale().fitContent()
+      }, 100)
+    }
 
     // Handle resize
     const handleResize = () => {
@@ -122,14 +137,30 @@ export default function PriceChart({
   useEffect(() => {
     if (upSeriesRef.current && upData.length > 0) {
       upSeriesRef.current.setData(upData as LineData[])
+      // Fit content to show all data
+      if (chartRef.current) {
+        chartRef.current.timeScale().fitContent()
+      }
     }
   }, [upData])
 
   useEffect(() => {
     if (downSeriesRef.current && downData.length > 0) {
       downSeriesRef.current.setData(downData as LineData[])
+      // Fit content to show all data
+      if (chartRef.current) {
+        chartRef.current.timeScale().fitContent()
+      }
     }
   }, [downData])
+
+  // Update chart when data changes (for time filter changes)
+  useEffect(() => {
+    if (chartRef.current && upData.length > 0 && downData.length > 0) {
+      // Fit content to show the selected time range
+      chartRef.current.timeScale().fitContent()
+    }
+  }, [upData, downData])
 
   return (
     <div className="w-full">

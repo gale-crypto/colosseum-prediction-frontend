@@ -1,4 +1,4 @@
-import { solana } from '@reown/appkit/networks'
+import { solana, solanaDevnet } from '@reown/appkit/networks'
 import type { AppKitNetwork } from '@reown/appkit/networks'
 import { SolanaAdapter } from '@reown/appkit-adapter-solana/react'
 
@@ -9,7 +9,7 @@ if (!projectId) {
   throw new Error('Project ID is not defined')
 }
 
-export const networks: [AppKitNetwork, ...AppKitNetwork[]] = [solana]
+export const networks: [AppKitNetwork, ...AppKitNetwork[]] = [/*solana*/ solanaDevnet]
 
 export const solanaWeb3JsAdapter = new SolanaAdapter()
 

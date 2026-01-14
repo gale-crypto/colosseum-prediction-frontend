@@ -66,8 +66,13 @@ export default function UserProfilePage() {
         <div className="flex flex-col gap-4 sm:gap-6">
           {/* User Info */}
           <div className="flex items-center gap-3 sm:gap-4">
-            <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 flex items-center justify-center text-white text-lg sm:text-xl font-semibold flex-shrink-0">
-              {address?.charAt(2).toUpperCase() || 'U'}
+            <div 
+            className='p-0.5 rounded-full avatar-outer-box'
+            >
+              <div className='p-2 bg-transparent rounded-full'>
+                <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 flex items-center justify-center text-white text-lg sm:text-xl font-semibold flex-shrink-0">
+                </div>
+              </div>
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-2">

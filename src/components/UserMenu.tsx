@@ -1,18 +1,20 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useAppKitAccount, useAppKit, useDisconnect } from '@reown/appkit/react'
+import { useAppKitAccount, useAppKit } from '@reown/appkit/react'
+import { useWalletAuth } from '../hooks/useWalletAuth'
 import { 
   User, 
   Settings, 
   Share2, 
   HelpCircle, 
-  LogOut
+  LogOut,
+  Plus
 } from 'lucide-react'
 
 export default function UserMenu() {
   const { address, isConnected } = useAppKitAccount()
   const { open } = useAppKit()
-  const { disconnect } = useDisconnect()
+  const { user, signOut, isAuthenticated } = useWalletAuth()
   const navigate = useNavigate()
   const [isOpen, setIsOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
@@ -34,13 +36,13 @@ export default function UserMenu() {
     if (!addr) return ''
     return `${addr.slice(0, 4)}...${addr.slice(-4)}`
   }
-
-  const handleDisconnect = () => {
-    disconnect()
+  
+  const handleDisconnect = async () => {
+    await signOut()
     setIsOpen(false)
   }
 
-  if (!isConnected || !address) {
+  if (!isConnected || !address || !isAuthenticated) {
     return (
       <button
         onClick={() => open()}
@@ -53,7 +55,11 @@ export default function UserMenu() {
   }
 
   return (
-    <div className="relative" ref={menuRef}>
+    <div className="relative flex items-center gap-4" ref={menuRef}>
+      <button className="flex items-center gap-2 px-3 py-2 bg-primary/10 hover:bg-primary/20 border border-primary/30 rounded-full text-primary font-medium transition-colors text-sm">
+        <Plus className="w-4 h-4" />
+        Deposit
+      </button>
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="flex cursor-pointer p-1 m-1 overflow-hidden rounded-full border border-transparent bg-[#2b303a] hover:bg-bg-weak-50 hover:border-alpha-neutral-v2-alpha-10 transition-colors duration-200"
@@ -75,16 +81,21 @@ export default function UserMenu() {
               </div>
               <div className="flex-1 min-w-0">
                 <div className="text-sm font-medium text-foreground truncate">
-                  {formatAddress(address)}
+                  {user?.username || formatAddress(address)}
                 </div>
-                <div className="flex items-center gap-2 mt-1">
-                  <div className="w-16 h-1.5 bg-muted rounded-full overflow-hidden">
-                    <div className="h-full bg-primary" style={{ width: '0%' }}></div>
+                {user?.username && (
+                  <div className="text-xs text-muted-foreground truncate">
+                    {formatAddress(address)}
                   </div>
-                  <span className="text-xs text-muted-foreground">0%</span>
-                </div>
-                <div className="text-xs text-muted-foreground mt-1">Complete profile</div>
-                <div className="text-xs text-muted-foreground">12 steps left</div>
+                )}
+                {user && (
+                  <div className="flex items-center gap-2 mt-1">
+                    <div className="w-16 h-1.5 bg-muted rounded-full overflow-hidden">
+                      <div className="h-full bg-primary" style={{ width: `${user.reputation_score}%` }}></div>
+                    </div>
+                    <span className="text-xs text-muted-foreground">{user.reputation_score}%</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>

@@ -1,73 +1,32 @@
 import { useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import MarketCard from '../components/MarketCard'
 import CategoryCard from '../components/CategoryCard'
 import Dropdown from '../components/Dropdown'
 import FilterModal from '../components/FilterModal'
-import type { Market } from '../components/MarketCard'
+import { useMarkets, useCategories } from '../hooks/useMarkets'
 import { Star, Clock, BarChart3, TrendingUp, ChevronRight, Search } from 'lucide-react'
-
-// Mock data - replace with actual API calls
-const mockMarkets: Market[] = [
-  {
-    id: '1',
-    question: 'Will Ethereum reach $4,000 before $2,500?',
-    description: 'This market resolves to YES if ETH reaches $4,000 before it reaches $2,500, and NO otherwise.',
-    endDate: '2026-12-31',
-    volume: 1250000,
-    participants: 3420,
-    yesPrice: 0.65,
-    noPrice: 0.35,
-    category: 'Crypto'
-  },
-  {
-    id: '2',
-    question: 'Will Bitcoin hit $100k in 2026?',
-    description: 'This market resolves to YES if BTC reaches $100,000 USD on any exchange before January 1, 2025.',
-    endDate: '2026-12-31',
-    volume: 890000,
-    participants: 2150,
-    yesPrice: 0.42,
-    noPrice: 0.58,
-    category: 'Crypto'
-  },
-  {
-    id: '3',
-    question: 'Will there be a recession in 2026?',
-    description: 'This market resolves based on official GDP data showing two consecutive quarters of negative growth.',
-    endDate: '2026-12-31',
-    volume: 560000,
-    participants: 1890,
-    yesPrice: 0.28,
-    noPrice: 0.72,
-    category: 'Economics'
-  },
-  {
-    id: '4',
-    question: 'Will AI achieve AGI by 2026?',
-    description: 'This market resolves based on consensus from major AI research institutions.',
-    endDate: '2026-12-31',
-    volume: 320000,
-    participants: 980,
-    yesPrice: 0.15,
-    noPrice: 0.85,
-    category: 'Technology'
-  }
-]
+import type { MarketCardData } from '../types/database'
 
 export default function MarketsPage() {
+  const [searchParams, setSearchParams] = useSearchParams()
+  const categoryFromUrl = searchParams.get('category') || undefined
+  
   const [selectedToken, setSelectedToken] = useState<string>('all')
   const [selectedStatus, setSelectedStatus] = useState<string>('open')
   const [activeFilter, setActiveFilter] = useState<string>('featured')
+  const [searchQuery, setSearchQuery] = useState<string>('')
 
-  const categoryCards = [
-    { name: 'Crypto', gradient: 'bg-gradient-to-br from-yellow-500/20 to-orange-500/20', count: 9 },
-    { name: 'Sports', gradient: 'bg-gradient-to-br from-blue-500/20 to-cyan-500/20', count: 9 },
-    { name: 'Politics', gradient: 'bg-gradient-to-br from-purple-500/20 to-pink-500/20', count: 12 },
-    { name: 'Economy', gradient: 'bg-gradient-to-br from-green-500/20 to-emerald-500/20', count: 15 },
-    { name: 'Gaming', gradient: 'bg-gradient-to-br from-yellow-500/20 to-orange-500/20', count: 7 },
-    { name: 'Culture', gradient: 'bg-gradient-to-br from-pink-500/20 to-rose-500/20', count: 5 },
-    { name: 'Sentiment', gradient: 'bg-gradient-to-br from-gray-500/20 to-gray-500/20', count: 5 },
-  ]
+  // Fetch markets from Supabase
+  const { data: markets = [], isLoading, error } = useMarkets({
+    category: categoryFromUrl,
+    status: selectedStatus,
+    search: searchQuery || undefined,
+    sortBy: activeFilter === 'volume' ? 'volume' : activeFilter === 'newest' ? 'created_at' : 'participants'
+  })
+
+  // Fetch categories from Supabase
+  const { data: categories = [] } = useCategories()
 
   const filters = [
     { id: 'featured', label: 'Featured', icon: Star },
@@ -89,9 +48,23 @@ export default function MarketsPage() {
     { value: 'resolved', label: 'Resolved' },
   ]
 
-  const filteredMarkets = mockMarkets.filter(() => {
-    // In a real app, you'd filter by token and status here
-    return true
+  // Map categories to category cards format
+  const categoryCards = categories.map(cat => {
+    const gradients: Record<string, string> = {
+      'Crypto': 'bg-gradient-to-br from-yellow-500/20 to-orange-500/20',
+      'Sports': 'bg-gradient-to-br from-blue-500/20 to-cyan-500/20',
+      'Politics': 'bg-gradient-to-br from-purple-500/20 to-pink-500/20',
+      'Economy': 'bg-gradient-to-br from-green-500/20 to-emerald-500/20',
+      'Gaming': 'bg-gradient-to-br from-yellow-500/20 to-orange-500/20',
+      'Culture': 'bg-gradient-to-br from-pink-500/20 to-rose-500/20',
+      'Sentiment': 'bg-gradient-to-br from-gray-500/20 to-gray-500/20',
+    }
+    return {
+      name: cat.name,
+      slug: cat.slug,
+      gradient: gradients[cat.name] || 'bg-gradient-to-br from-primary/20 to-secondary/20',
+      count: cat.market_count
+    }
   })
 
   return (
@@ -101,9 +74,11 @@ export default function MarketsPage() {
         <div className="flex 2xl:grid 2xl:grid-cols-7 gap-2 p-2 overflow-x-auto 2xl:overflow-hidden scrollbar-hide">
           {categoryCards.map((category) => (
             <CategoryCard
-              key={category.name}
+              key={category.slug}
               name={category.name}
+              slug={category.slug}
               gradient={category.gradient}
+              isActive={categoryFromUrl === category.slug}
             />
           ))}
         </div>
@@ -128,6 +103,8 @@ export default function MarketsPage() {
             <input
               type="text"
               placeholder="Search markets..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-10 pr-4 py-2.5 bg-input/50 border border-border/50 rounded-full text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 backdrop-blur-sm text-sm"
             />
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground pointer-events-none" />
@@ -151,6 +128,8 @@ export default function MarketsPage() {
             <input
               type="text"
               placeholder="Search markets..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-10 pr-4 py-2.5 bg-input/50 border border-border/50 rounded-full text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 backdrop-blur-sm text-sm"
             />
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground pointer-events-none" />
@@ -190,9 +169,19 @@ export default function MarketsPage() {
       </div>
 
       {/* Markets Grid */}
-      {filteredMarkets.length > 0 ? (
+      {isLoading ? (
+        <div className="flex flex-col items-center h-full w-full py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mb-4"></div>
+          <p className="text-muted-foreground">Loading markets...</p>
+        </div>
+      ) : error ? (
+        <div className="flex flex-col items-center h-full w-full py-12">
+          <p className="text-muted-foreground text-lg">Error loading markets</p>
+          <p className="text-muted-foreground text-sm mt-2">Please try again later.</p>
+        </div>
+      ) : markets.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 3xl:grid-cols-4 gap-4 sm:gap-6">
-          {filteredMarkets.map(market => (
+          {markets.map(market => (
             <MarketCard key={market.id} market={market} />
           ))}
         </div>
@@ -205,4 +194,3 @@ export default function MarketsPage() {
     </div>
   )
 }
-

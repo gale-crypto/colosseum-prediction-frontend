@@ -1,6 +1,7 @@
-import { Link, useLocation } from 'react-router-dom'
-import { LayoutDashboard, Trophy, Gem, FileText, TrendingUp, Activity, Building2, Gamepad2, Palette, Menu, X } from 'lucide-react'
+import { Link, useLocation, useSearchParams } from 'react-router-dom'
+import { LayoutDashboard, Trophy, Gem, FileText, TrendingUp, Activity, Building2, Gamepad2, Palette, Menu, X, Settings } from 'lucide-react'
 import { useState } from 'react'
+import { useCategories } from '../hooks/useMarkets'
 
 interface SidebarProps {
   isCollapsed: boolean,
@@ -11,18 +12,52 @@ interface SidebarProps {
 
 export default function Sidebar({ isCollapsed, onMenuClick, isMobileOpen = false, onMobileClose }: SidebarProps) {
   const location = useLocation()
+  const [searchParams] = useSearchParams()
+  const { data: categories = [] } = useCategories()
   
   const isActive = (path: string) => {
     return location.pathname === path || location.pathname.startsWith(path + '/')
   }
 
-  const topics = [
-    { name: 'Crypto', icon: TrendingUp, count: 24, color: 'text-yellow-400' },
-    { name: 'Sports', icon: Activity, count: 9, color: 'text-blue-400' },
-    { name: 'Politics', icon: Building2, count: 12, color: 'text-purple-400' },
-    { name: 'Gaming', icon: Gamepad2, count: 7, color: 'text-green-400' },
-    { name: 'Culture', icon: Palette, count: 5, color: 'text-pink-400' },
-  ]
+  // Map category names to icons
+  const categoryIcons: Record<string, typeof TrendingUp> = {
+    'Crypto': TrendingUp,
+    'Sports': Activity,
+    'Politics': Building2,
+    'Gaming': Gamepad2,
+    'Culture': Palette,
+    'Economy': Building2,
+    'Sentiment': Activity,
+  }
+
+  const categoryColors: Record<string, string> = {
+    'Crypto': 'text-yellow-400',
+    'Sports': 'text-blue-400',
+    'Politics': 'text-purple-400',
+    'Gaming': 'text-green-400',
+    'Culture': 'text-pink-400',
+    'Economy': 'text-green-400',
+    'Sentiment': 'text-gray-400',
+  }
+
+  // Use categories from database, or fallback to hardcoded topics
+  const topics = categories.length > 0 
+    ? categories.slice(0, 5).map(cat => ({
+        name: cat.name,
+        slug: cat.slug,
+        icon: categoryIcons[cat.name] || TrendingUp,
+        count: cat.market_count || 0,
+        color: categoryColors[cat.name] || 'text-muted-foreground'
+      }))
+    : [
+        { name: 'Crypto', slug: 'crypto', icon: TrendingUp, count: 24, color: 'text-yellow-400' },
+        { name: 'Sports', slug: 'sports', icon: Activity, count: 9, color: 'text-blue-400' },
+        { name: 'Politics', slug: 'politics', icon: Building2, count: 12, color: 'text-purple-400' },
+        { name: 'Gaming', slug: 'gaming', icon: Gamepad2, count: 7, color: 'text-green-400' },
+        { name: 'Culture', slug: 'culture', icon: Palette, count: 5, color: 'text-pink-400' },
+      ]
+  
+  const activeCategory = searchParams.get('category')
 
   const [isHovered, setIsHovered] = useState(false)
 
@@ -193,6 +228,29 @@ export default function Sidebar({ isCollapsed, onMenuClick, isMobileOpen = false
               </span>
             )}
           </Link>
+          {/* {user?.is_admin && ( */}
+            <Link
+              to="/create-market"
+              onClick={handleLinkClick}
+              className={`flex items-center rounded-full transition-colors group relative ${
+                isCollapsed 
+                  ? 'justify-center px-3 py-3' 
+                  : 'gap-3 px-4 py-3'
+              } ${
+                isActive('/create-market')
+                  ? 'bg-primary/20 text-primary border border-primary/30'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+              }`}
+            >
+              <Settings className="w-5 h-5 flex-shrink-0" />
+              {!isCollapsed && <span className="font-medium">Create</span>}
+              {isCollapsed && (
+                <span className="absolute left-full ml-2 px-2 py-1 bg-card border border-border rounded-full text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                  Create Market
+                </span>
+              )}
+            </Link>
+          {/* )} */}
         </nav>
 
         {/* Topics Section */}
@@ -205,15 +263,20 @@ export default function Sidebar({ isCollapsed, onMenuClick, isMobileOpen = false
           <div className={`space-y-2 ${isCollapsed ? 'space-y-3' : ''}`}>
             {topics.map((topic) => {
               const Icon = topic.icon
+              const isTopicActive = activeCategory === topic.slug
               return (
                 <Link
-                  key={topic.name}
-                  to={`/markets?category=${topic.name.toLowerCase()}`}
+                  key={topic.slug}
+                  to={`/markets?category=${topic.slug}`}
                   onClick={handleLinkClick}
-                  className={`flex items-center rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors group relative ${
+                  className={`flex items-center rounded-full transition-colors group relative ${
                     isCollapsed 
                       ? 'justify-center px-3 py-2.5' 
                       : 'justify-between px-4 py-2.5'
+                  } ${
+                    isTopicActive
+                      ? 'bg-primary/20 text-primary border border-primary/30'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
                   }`}
                 >
                   <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'}`}>
@@ -221,7 +284,9 @@ export default function Sidebar({ isCollapsed, onMenuClick, isMobileOpen = false
                     {!isCollapsed && <span className="font-medium">{topic.name}</span>}
                   </div>
                   {!isCollapsed && (
-                    <span className="text-xs text-muted-foreground group-hover:text-foreground">
+                    <span className={`text-xs group-hover:text-foreground ${
+                      isTopicActive ? 'text-primary' : 'text-muted-foreground'
+                    }`}>
                       {topic.count}
                     </span>
                   )}
