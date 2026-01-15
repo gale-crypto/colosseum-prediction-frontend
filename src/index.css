@@ -127,12 +127,12 @@
     display: none;
   }
 
-  .market-card-bg {
-    background: url('/images/markets/ex-market-card-img.webp');
+  /* .market-card-bg {
+    background: url(attr(data-content));
     background-size: cover;
     background-repeat: no-repeat;
     background-position: center;
-  }
+  } */
 
   .colosseum-bg {
     background-image: url('/images/background.png');
@@ -266,4 +266,20 @@
 .prose h2:first-child,
 .prose h3:first-child {
   margin-top: 0;
+}
+
+.arena-text {
+  color: transparent;
+  background: linear-gradient(207.82deg, #FFC525 37.78%, #D48B21 65.08%, #864211 122.16%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  -moz-background-clip: text;
+}
+
+.arena-text::before {
+  content: attr(data-content);
+  text-shadow: 0px -0.5px 1px #000000BF, 0px 0.5px 0px #D8AE7C;
+  position: absolute;
+  z-index: -1;
 }

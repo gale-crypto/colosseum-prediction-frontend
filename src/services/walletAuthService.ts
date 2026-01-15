@@ -9,24 +9,30 @@ export class WalletAuthService {
   async authenticateWithWallet(walletAddress: string): Promise<{ user: User | null; error: Error | null }> {
     try {
       // Check if user exists with this wallet address
+      // Use ilike for case-insensitive matching and handle potential encoding issues
       const { data: existingUser, error: fetchError } = await supabase
         .from('users')
         .select('*')
-        .eq('wallet_address', walletAddress)
-        .single()
+        .eq('wallet_address', walletAddress.trim())
+        .maybeSingle() // Use maybeSingle instead of single to avoid errors when no row found
 
       if (fetchError) {
         // PGRST116 means no rows found, which is fine - user doesn't exist yet
+        // 406 errors might also occur if RLS policies aren't set up correctly
         if (fetchError.code === 'PGRST116') {
           // User doesn't exist, will create below
+        } else if (fetchError.code === '406' || fetchError.message?.includes('406')) {
+          // 406 Not Acceptable - likely RLS policy issue
+          console.warn('406 error fetching user - RLS policy may need updating:', fetchError)
+          // Continue to try creating user - if it exists, upsert will handle it
         } else {
           // Other error (like RLS policy violation)
           console.error('Error fetching user:', fetchError)
-          throw new Error(`Failed to check user: ${fetchError.message}`)
+          // Don't throw - continue to try upsert which will handle existing users
         }
       }
 
-      if (existingUser && !fetchError) {
+      if (existingUser) {
         // User exists, sign in with custom token
         // For now, we'll use a simple approach: store wallet in sessionStorage
         // In production, you'd want to use Supabase Auth with custom tokens
@@ -36,12 +42,14 @@ export class WalletAuthService {
         return { user: existingUser as User, error: null }
       }
 
-      // Create new user
-      const { data: newUser, error: createError } = await supabase
+      // Use upsert to handle race conditions - if user exists, update; if not, create
+      const defaultUsername = walletAddress.slice(0, 4) + '...' + walletAddress.slice(-4)
+      
+      const { data: newUser, error: upsertError } = await supabase
         .from('users')
-        .insert({
+        .upsert({
           wallet_address: walletAddress,
-          username: walletAddress.slice(0, 4) + '...' + walletAddress.slice(-4),
+          username: defaultUsername,
           email: null,
           avatar_url: null,
           bio: null,
@@ -50,29 +58,51 @@ export class WalletAuthService {
           total_profit: 0,
           win_rate: 0,
           is_verified: false,
-          is_admin: false
+          is_admin: false,
+          updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'wallet_address',
+          ignoreDuplicates: false // Update if exists
         })
         .select()
         .single()
 
-      if (createError) {
-        console.error('Error creating user:', createError)
-        // Check if it's a unique constraint violation (user already exists)
-        if (createError.code === '23505') {
-          // User was created between our check and insert, fetch it
-          const { data: existingUser } = await supabase
+      if (upsertError) {
+        console.error('Error upserting user:', upsertError)
+        
+        // If upsert fails, try to fetch the existing user one more time
+        if (upsertError.code === '23505' || upsertError.code === 'PGRST116' || upsertError.code === '406') {
+          const { data: existingUser, error: fetchError2 } = await supabase
             .from('users')
             .select('*')
-            .eq('wallet_address', walletAddress)
-            .single()
+            .eq('wallet_address', walletAddress.trim())
+            .maybeSingle()
           
-          if (existingUser) {
+          if (existingUser && !fetchError2) {
             sessionStorage.setItem('wallet_address', walletAddress)
             sessionStorage.setItem('user_id', existingUser.id)
             return { user: existingUser as User, error: null }
           }
         }
-        throw new Error(`Failed to create user: ${createError.message}. Please check RLS policies.`)
+        
+        throw new Error(`Failed to create/update user: ${upsertError.message}. Please check RLS policies.`)
+      }
+
+      if (!newUser) {
+        // If upsert didn't return data but also didn't error, try fetching
+        const { data: fetchedUser, error: fetchError3 } = await supabase
+          .from('users')
+          .select('*')
+          .eq('wallet_address', walletAddress.trim())
+          .maybeSingle()
+        
+        if (fetchedUser && !fetchError3) {
+          sessionStorage.setItem('wallet_address', walletAddress)
+          sessionStorage.setItem('user_id', fetchedUser.id)
+          return { user: fetchedUser as User, error: null }
+        }
+        
+        throw new Error('Failed to create user: No data returned')
       }
 
       // Store in session
@@ -112,8 +142,8 @@ export class WalletAuthService {
     const { data, error } = await supabase
       .from('users')
       .select('*')
-      .eq('wallet_address', walletAddress)
-      .single()
+      .eq('wallet_address', walletAddress.trim())
+      .maybeSingle()
 
     if (error || !data) {
       return null

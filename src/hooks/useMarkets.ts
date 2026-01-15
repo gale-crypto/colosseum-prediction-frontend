@@ -70,12 +70,15 @@ export function useCreateMarket() {
       end_date?: string
       resolution_source_url?: string
       resolution_source_name?: string
-      image_url?: string
+      banner_url?: string
+      logo_url?: string
       tags?: string[]
       payment_options: string[]
       custom_labels?: { up: string; down: string }
       multi_choice_options?: string[]
       badge?: string
+      initial_yes_price?: number
+      initial_no_price?: number
       creation_fee_paid: boolean
       creation_fee_amount: number
     }) => {
@@ -114,7 +117,9 @@ export function useCreateMarket() {
           resolution_source_url: data.resolution_source_url || null,
           resolution_source_name: data.resolution_source_name || null,
           resolution_source: data.resolution_source_name || 'You', // Keep for backward compatibility
-          image_url: data.image_url || null,
+          banner_url: data.banner_url || null,
+          logo_url: data.logo_url || null,
+          image_url: data.banner_url || null, // Keep for backward compatibility
           tags: data.tags || null,
           payment_options: data.payment_options,
           custom_labels: data.custom_labels || null,
@@ -122,8 +127,10 @@ export function useCreateMarket() {
           badge: data.badge || null,
           creation_fee_paid: data.creation_fee_paid,
           creation_fee_amount: data.creation_fee_amount,
-          yes_price: 0.5,
-          no_price: 0.5,
+          yes_price: data.initial_yes_price ?? 0.5,
+          no_price: data.initial_no_price ?? 0.5,
+          initial_yes_price: data.initial_yes_price ?? 0.5,
+          initial_no_price: data.initial_no_price ?? 0.5,
           volume: 0,
           liquidity: 0,
           participants: 0,
@@ -135,6 +142,27 @@ export function useCreateMarket() {
 
       if (error) {
         throw error
+      }
+
+      // Create initial price history entry with custom or default prices
+      if (market) {
+        const initialYesPrice = data.initial_yes_price ?? 0.5
+        const initialNoPrice = data.initial_no_price ?? 0.5
+        
+        const { error: priceHistoryError } = await supabase
+          .from('market_price_history')
+          .insert({
+            market_id: market.id,
+            yes_price: initialYesPrice,
+            no_price: initialNoPrice,
+            volume_24h: 0,
+            timestamp: new Date().toISOString()
+          })
+
+        if (priceHistoryError) {
+          console.error('Error creating initial price history:', priceHistoryError)
+          // Don't throw - market is created, price history is optional
+        }
       }
 
       return market

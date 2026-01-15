@@ -180,7 +180,7 @@ export default function MarketsPage() {
           <p className="text-muted-foreground text-sm mt-2">Please try again later.</p>
         </div>
       ) : markets.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 3xl:grid-cols-4 gap-4 sm:gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 sm:gap-6">
           {markets.map(market => (
             <MarketCard key={market.id} market={market} />
           ))}

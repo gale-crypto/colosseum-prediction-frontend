@@ -43,6 +43,8 @@ export interface Market {
   resolution_date: string | null
   yes_price: number
   no_price: number
+  initial_yes_price: number | null
+  initial_no_price: number | null
   volume: number
   liquidity: number
   participants: number
@@ -53,7 +55,9 @@ export interface Market {
   resolution_source_url: string | null
   resolution_source_name: string | null
   resolution_notes: string | null
-  image_url: string | null
+  image_url: string | null // Deprecated, use banner_url and logo_url
+  banner_url: string | null
+  logo_url: string | null
   tags: string[] | null
   is_featured: boolean
   is_verified: boolean
@@ -156,5 +160,8 @@ export interface MarketCardData {
   noPrice: number
   category: string,
   custom_labels: { up: string; down: string }
+  image_url: string | null // Deprecated, use banner_url
+  banner_url: string | null
+  logo_url: string | null
 }
 

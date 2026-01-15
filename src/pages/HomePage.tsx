@@ -3,7 +3,7 @@ import { ArrowRight, TrendingUp, Users, Clock } from 'lucide-react'
 
 export default function HomePage() {
   return (
-    <div className="max-w-6xl mx-auto">
+    <div className="mx-auto">
       {/* Hero Section */}
       <div className="text-center mb-16">
         <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-6 gold-text gelio-font leading-tight">

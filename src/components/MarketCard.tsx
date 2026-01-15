@@ -31,7 +31,17 @@ export default function MarketCard({ market }: MarketCardProps) {
       <div className="relative bg-card/90 border border-border/50 rounded-2xl overflow-hidden hover:border-primary/70 hover:shadow-xl transition-all cursor-pointer backdrop-blur-sm group">
         {/* Category Image/Background */}
         <div className={`h-32 bg-gradient-to-br ${gradient} relative overflow-hidden`}>
-          <div className="absolute inset-0 market-card-bg"></div>
+          {(market.banner_url || market.image_url) && (
+            <div 
+            className="absolute inset-0"
+            style={{
+              backgroundImage: `url(${market.banner_url || market.image_url})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              backgroundRepeat: 'no-repeat',
+            }}
+            ></div>
+          )}
         </div>
         
         <div className="p-5">

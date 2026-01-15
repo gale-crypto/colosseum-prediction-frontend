@@ -2,19 +2,22 @@ import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAppKitAccount, useAppKit } from '@reown/appkit/react'
 import { useWalletAuth } from '../hooks/useWalletAuth'
+import { useUserRank } from '../hooks/useUserProfile'
 import { 
   User, 
   Settings, 
   Share2, 
   HelpCircle, 
   LogOut,
-  Plus
+  Plus,
+  Trophy
 } from 'lucide-react'
 
 export default function UserMenu() {
   const { address, isConnected } = useAppKitAccount()
   const { open } = useAppKit()
   const { user, signOut, isAuthenticated } = useWalletAuth()
+  const { data: userRank } = useUserRank(user?.id)
   const navigate = useNavigate()
   const [isOpen, setIsOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
@@ -64,36 +67,26 @@ export default function UserMenu() {
         onClick={() => setIsOpen(!isOpen)}
         className="flex cursor-pointer p-1 m-1 overflow-hidden rounded-full border border-transparent bg-[#2b303a] hover:bg-bg-weak-50 hover:border-alpha-neutral-v2-alpha-10 transition-colors duration-200"
       >
-        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white text-xs font-semibold"/>
-          {/* {address.charAt(2).toUpperCase()} */}
-        {/* </div>
-        <span className="hidden sm:inline text-sm font-medium">{formatAddress(address)}</span>
-        <ChevronDown className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} /> */}
+        {user?.avatar_url ? <img src={user.avatar_url} alt="Avatar" className="w-8 h-8 rounded-full" /> : <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white text-xs font-semibold"/>}
       </button>
 
       {isOpen && (
         <div className="absolute right-0 top-full mt-2 w-[calc(100vw-2rem)] sm:w-80 max-w-sm bg-card border border-border/50 rounded-2xl shadow-xl z-50 overflow-hidden">
           {/* Profile Card */}
           <div className="p-4 bg-muted/30 border-b border-border/30">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-semibold flex-shrink-0">
-                {address.charAt(2).toUpperCase()}
-              </div>
+            <div className="flex items-center gap-3">
+              {user?.avatar_url ? <img src={user.avatar_url} alt="Avatar" className="w-12 h-12 rounded-full" /> : <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-semibold flex-shrink-0"/>}
+
               <div className="flex-1 min-w-0">
                 <div className="text-sm font-medium text-foreground truncate">
                   {user?.username || formatAddress(address)}
                 </div>
-                {user?.username && (
-                  <div className="text-xs text-muted-foreground truncate">
-                    {formatAddress(address)}
-                  </div>
-                )}
-                {user && (
-                  <div className="flex items-center gap-2 mt-1">
-                    <div className="w-16 h-1.5 bg-muted rounded-full overflow-hidden">
-                      <div className="h-full bg-primary" style={{ width: `${user.reputation_score}%` }}></div>
-                    </div>
-                    <span className="text-xs text-muted-foreground">{user.reputation_score}%</span>
+                {userRank && (
+                  <div className="flex items-center gap-1.5 mt-1">
+                    <Trophy className="w-3.5 h-3.5 text-yellow-500" />
+                    <span className="text-xs text-muted-foreground">
+                      Rank #{userRank.toLocaleString()}
+                    </span>
                   </div>
                 )}
               </div>

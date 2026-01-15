@@ -15,19 +15,18 @@ import {
   Gift
 } from 'lucide-react'
 import Dropdown from '../components/Dropdown'
+import { useWalletAuth } from '../hooks/useWalletAuth'
+import { useUserRank } from '../hooks/useUserProfile'
 
 export default function UserProfilePage() {
-  const { address } = useAppKitAccount()
+  const { address, isConnected } = useAppKitAccount()
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState('portfolio')
   const [selectedTopic, setSelectedTopic] = useState('all')
   const [selectedSort, setSelectedSort] = useState('newest')
   const [copied, setCopied] = useState(false)
-
-  const formatAddress = (addr: string | undefined) => {
-    if (!addr) return ''
-    return `${addr.slice(0, 4)}...${addr.slice(-4)}`
-  }
+  const { user, isAuthenticated } = useWalletAuth()
+  const { data: userRank } = useUserRank(user?.id)
 
   const handleCopy = () => {
     if (address) {
@@ -59,6 +58,28 @@ export default function UserProfilePage() {
     { id: 'referral', label: 'Referral Points', icon: Gift },
   ]
 
+  if(!isConnected || !address) {
+    return (
+    <div className="mx-auto flex items-center justify-center min-h-[400px]">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+        <p className="text-muted-foreground">Loading profile...</p>
+      </div>
+    </div>
+    )
+  }
+
+  if(!isAuthenticated || !user) {
+    return (
+    <div className="mx-auto flex items-center justify-center min-h-[400px]">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+        <p className="text-muted-foreground">Loading profile...</p>
+      </div>
+    </div>
+    )
+  }
+
   return (
     <div className="max-w-8xl mx-auto">
       {/* User Profile Section */}
@@ -70,14 +91,13 @@ export default function UserProfilePage() {
             className='p-0.5 rounded-full avatar-outer-box'
             >
               <div className='p-2 bg-transparent rounded-full'>
-                <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 flex items-center justify-center text-white text-lg sm:text-xl font-semibold flex-shrink-0">
-                </div>
+                {user?.avatar_url ? <img src={user.avatar_url} alt="Avatar" className="w-12 h-12 rounded-full" /> : <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white text-lg sm:text-xl font-semibold flex-shrink-0"/>}
               </div>
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-2">
                 <h1 className="text-xl sm:text-2xl font-bold text-foreground truncate">
-                  {formatAddress(address)}
+                  {user.username}
                 </h1>
                 <button
                   onClick={() => navigate('/settings')}
@@ -133,7 +153,7 @@ export default function UserProfilePage() {
                 <Trophy className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-500" />
               </div>
               <div className="text-xs sm:text-sm text-muted-foreground mb-1">Rank</div>
-              <div className="text-base sm:text-lg font-semibold text-foreground">365,117</div>
+              <div className="text-base sm:text-lg font-semibold text-foreground">{userRank?.toLocaleString()}</div>
             </div>
           </div>
         </div>

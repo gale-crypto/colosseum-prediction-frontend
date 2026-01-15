@@ -18,12 +18,15 @@ interface MarketFormData {
   end_date: string
   resolution_source_url: string
   resolution_source_name: string
-  image_url: string
+  banner_url: string
+  logo_url: string
   tags: string
   payment_options: string[] // ['USDT', 'SOL']
   custom_labels: { up: string; down: string }
   multi_choice_options: string[]
   badge: string
+  initial_yes_price: number
+  initial_no_price: number
 }
 
 const BADGE_OPTIONS = [
@@ -51,18 +54,23 @@ export default function CreateMarketPage() {
     end_date: '',
     resolution_source_url: '',
     resolution_source_name: '',
-    image_url: '',
+    banner_url: '',
+    logo_url: '',
     tags: '',
     payment_options: ['USDT', 'SOL'],
     custom_labels: { up: 'UP', down: 'DOWN' },
     multi_choice_options: [],
-    badge: ''
+    badge: '',
+    initial_yes_price: 0.5,
+    initial_no_price: 0.5
   })
   
   const [errors, setErrors] = useState<Partial<Record<keyof MarketFormData | 'payment' | 'multi_choice', string>>>({})
-  const [imageFile, setImageFile] = useState<File | null>(null)
-  const [imagePreview, setImagePreview] = useState<string | null>(null)
-  const [uploadingImage, setUploadingImage] = useState(false)
+  const [bannerFile, setBannerFile] = useState<File | null>(null)
+  const [logoFile, setLogoFile] = useState<File | null>(null)
+  const [bannerPreview, setBannerPreview] = useState<string | null>(null)
+  const [logoPreview, setLogoPreview] = useState<string | null>(null)
+  const [uploadingImages, setUploadingImages] = useState(false)
   const [processingPayment, setProcessingPayment] = useState(false)
   const [newMultiChoiceOption, setNewMultiChoiceOption] = useState('')
 
@@ -131,9 +139,25 @@ export default function CreateMarketPage() {
       if (!formData.custom_labels.up.trim() || !formData.custom_labels.down.trim()) {
         newErrors.custom_labels = 'Both labels are required for binary markets'
       }
-    } else if (formData.market_method === 'multi_choice') {
+    } else     if (formData.market_method === 'multi_choice') {
       if (formData.multi_choice_options.length < 2) {
         newErrors.multi_choice = 'At least 2 options are required for multi-choice markets'
+      }
+    }
+
+    // Validate initial prices (only for binary markets)
+    if (formData.market_method === 'binary') {
+      const yesPrice = formData.initial_yes_price
+      const noPrice = formData.initial_no_price
+      
+      if (yesPrice < 0 || yesPrice > 1) {
+        newErrors.initial_yes_price = 'Yes price must be between 0 and 1'
+      }
+      if (noPrice < 0 || noPrice > 1) {
+        newErrors.initial_no_price = 'No price must be between 0 and 1'
+      }
+      if (Math.abs((yesPrice + noPrice) - 1.0) > 0.01) {
+        newErrors.initial_yes_price = 'Yes and No prices must sum to 1.0 (100%)'
       }
     }
 
@@ -163,20 +187,23 @@ export default function CreateMarketPage() {
       }
     }
 
-    let imageUrl = formData.image_url
+    let bannerUrl = formData.banner_url
+    let logoUrl = formData.logo_url
 
-    // Upload image if file is selected
-    if (imageFile) {
+    // Upload images if files are selected
+    if (bannerFile || logoFile) {
       try {
-        setUploadingImage(true)
-        imageUrl = await userService.uploadAvatar(imageFile)
+        setUploadingImages(true)
+        const uploadResult = await userService.uploadMarketImages(bannerFile || undefined, logoFile || undefined)
+        if (uploadResult.banner_url) bannerUrl = uploadResult.banner_url
+        if (uploadResult.logo_url) logoUrl = uploadResult.logo_url
       } catch (error) {
-        console.error('Error uploading image:', error)
-        setErrors({ image_url: error instanceof Error ? error.message : 'Failed to upload image' })
-        setUploadingImage(false)
+        console.error('Error uploading images:', error)
+        setErrors({ banner_url: error instanceof Error ? error.message : 'Failed to upload images' })
+        setUploadingImages(false)
         return
       } finally {
-        setUploadingImage(false)
+        setUploadingImages(false)
       }
     }
 
@@ -190,12 +217,15 @@ export default function CreateMarketPage() {
         end_date: formData.end_date || undefined,
         resolution_source_url: formData.resolution_source_url || undefined,
         resolution_source_name: formData.resolution_source_name || undefined,
-        image_url: imageUrl || undefined,
+        banner_url: bannerUrl || undefined,
+        logo_url: logoUrl || undefined,
         tags: formData.tags ? formData.tags.split(',').map(t => t.trim()) : undefined,
         payment_options: formData.payment_options,
         custom_labels: formData.market_method === 'binary' ? formData.custom_labels : undefined,
         multi_choice_options: formData.market_method === 'multi_choice' ? formData.multi_choice_options : undefined,
         badge: formData.badge || undefined,
+        initial_yes_price: formData.market_method === 'binary' ? formData.initial_yes_price : undefined,
+        initial_no_price: formData.market_method === 'binary' ? formData.initial_no_price : undefined,
         creation_fee_paid: !isAdmin,
         creation_fee_amount: isAdmin ? 0 : creationFee
       },
@@ -244,32 +274,60 @@ export default function CreateMarketPage() {
     }))
   }
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleBannerUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
-        setErrors(prev => ({ ...prev, image_url: 'File size must be less than 5MB' }))
+        setErrors(prev => ({ ...prev, banner_url: 'File size must be less than 5MB' }))
         return
       }
       const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp']
       if (!allowedTypes.includes(file.type)) {
-        setErrors(prev => ({ ...prev, image_url: 'Invalid file type' }))
+        setErrors(prev => ({ ...prev, banner_url: 'Invalid file type' }))
         return
       }
-      setImageFile(file)
-      setErrors(prev => ({ ...prev, image_url: undefined }))
+      setBannerFile(file)
+      setErrors(prev => ({ ...prev, banner_url: undefined }))
       const reader = new FileReader()
       reader.onloadend = () => {
-        setImagePreview(reader.result as string)
+        setBannerPreview(reader.result as string)
       }
       reader.readAsDataURL(file)
     }
   }
 
-  const removeImage = () => {
-    setImageFile(null)
-    setImagePreview(null)
-    setFormData(prev => ({ ...prev, image_url: '' }))
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        setErrors(prev => ({ ...prev, logo_url: 'File size must be less than 5MB' }))
+        return
+      }
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp']
+      if (!allowedTypes.includes(file.type)) {
+        setErrors(prev => ({ ...prev, logo_url: 'Invalid file type' }))
+        return
+      }
+      setLogoFile(file)
+      setErrors(prev => ({ ...prev, logo_url: undefined }))
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setLogoPreview(reader.result as string)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  const removeBanner = () => {
+    setBannerFile(null)
+    setBannerPreview(null)
+    setFormData(prev => ({ ...prev, banner_url: '' }))
+  }
+
+  const removeLogo = () => {
+    setLogoFile(null)
+    setLogoPreview(null)
+    setFormData(prev => ({ ...prev, logo_url: '' }))
   }
 
   return (
@@ -411,34 +469,102 @@ export default function CreateMarketPage() {
 
           {/* Custom Labels (Binary) */}
           {formData.market_method === 'binary' && (
-            <div className="grid md:grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="label_up" className="block text-sm font-medium mb-2">
-                  Up/Yes Label <span className="text-destructive">*</span>
-                </label>
-                <input
-                  id="label_up"
-                  type="text"
-                  value={formData.custom_labels.up}
-                  onChange={(e) => handleChange('custom_labels', { ...formData.custom_labels, up: e.target.value })}
-                  placeholder="UP, Yes, $5k, etc."
-                  className="w-full px-4 py-3 bg-muted/50 border border-border/50 rounded-lg text-foreground"
-                />
+            <>
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="label_up" className="block text-sm font-medium mb-2">
+                    Up/Yes Label <span className="text-destructive">*</span>
+                  </label>
+                  <input
+                    id="label_up"
+                    type="text"
+                    value={formData.custom_labels.up}
+                    onChange={(e) => handleChange('custom_labels', { ...formData.custom_labels, up: e.target.value })}
+                    placeholder="UP, Yes, $5k, etc."
+                    className="w-full px-4 py-3 bg-muted/50 border border-border/50 rounded-lg text-foreground"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="label_down" className="block text-sm font-medium mb-2">
+                    Down/No Label <span className="text-destructive">*</span>
+                  </label>
+                  <input
+                    id="label_down"
+                    type="text"
+                    value={formData.custom_labels.down}
+                    onChange={(e) => handleChange('custom_labels', { ...formData.custom_labels, down: e.target.value })}
+                    placeholder="DOWN, No, $2.5k, etc."
+                    className="w-full px-4 py-3 bg-muted/50 border border-border/50 rounded-lg text-foreground"
+                  />
+                </div>
               </div>
-              <div>
-                <label htmlFor="label_down" className="block text-sm font-medium mb-2">
-                  Down/No Label <span className="text-destructive">*</span>
-                </label>
-                <input
-                  id="label_down"
-                  type="text"
-                  value={formData.custom_labels.down}
-                  onChange={(e) => handleChange('custom_labels', { ...formData.custom_labels, down: e.target.value })}
-                  placeholder="DOWN, No, $2.5k, etc."
-                  className="w-full px-4 py-3 bg-muted/50 border border-border/50 rounded-lg text-foreground"
-                />
+
+              {/* Initial Prices (Binary) */}
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="initial_yes_price" className="block text-sm font-medium mb-2">
+                    Initial Yes Price <span className="text-destructive">*</span>
+                  </label>
+                  <input
+                    id="initial_yes_price"
+                    type="number"
+                    min="0"
+                    max="1"
+                    step="0.01"
+                    value={formData.initial_yes_price}
+                    onChange={(e) => {
+                      const yesPrice = parseFloat(e.target.value) || 0
+                      const noPrice = 1 - yesPrice
+                      handleChange('initial_yes_price', yesPrice)
+                      handleChange('initial_no_price', noPrice)
+                    }}
+                    className={`w-full px-4 py-3 bg-muted/50 border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 ${
+                      errors.initial_yes_price ? 'border-destructive' : 'border-border/50'
+                    }`}
+                  />
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {(formData.initial_yes_price * 100).toFixed(1)}%
+                  </p>
+                  {errors.initial_yes_price && (
+                    <p className="mt-1 text-sm text-destructive flex items-center gap-1">
+                      <AlertCircle className="w-4 h-4" />
+                      {errors.initial_yes_price}
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <label htmlFor="initial_no_price" className="block text-sm font-medium mb-2">
+                    Initial No Price <span className="text-destructive">*</span>
+                  </label>
+                  <input
+                    id="initial_no_price"
+                    type="number"
+                    min="0"
+                    max="1"
+                    step="0.01"
+                    value={formData.initial_no_price}
+                    onChange={(e) => {
+                      const noPrice = parseFloat(e.target.value) || 0
+                      const yesPrice = 1 - noPrice
+                      handleChange('initial_no_price', noPrice)
+                      handleChange('initial_yes_price', yesPrice)
+                    }}
+                    className={`w-full px-4 py-3 bg-muted/50 border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 ${
+                      errors.initial_no_price ? 'border-destructive' : 'border-border/50'
+                    }`}
+                  />
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {(formData.initial_no_price * 100).toFixed(1)}%
+                  </p>
+                  {errors.initial_no_price && (
+                    <p className="mt-1 text-sm text-destructive flex items-center gap-1">
+                      <AlertCircle className="w-4 h-4" />
+                      {errors.initial_no_price}
+                    </p>
+                  )}
+                </div>
               </div>
-            </div>
+            </>
           )}
 
           {/* Multi-Choice Options */}
@@ -602,17 +728,18 @@ export default function CreateMarketPage() {
             </div>
           )}
 
-          {/* Image Upload */}
+          {/* Banner Image Upload */}
           <div>
-            <label className="block text-sm font-medium mb-2">Market Image (Optional)</label>
-            {imagePreview ? (
+            <label className="block text-sm font-medium mb-2">Banner Image (Optional)</label>
+            <p className="text-xs text-muted-foreground mb-2">Recommended size: 1200x400px</p>
+            {bannerPreview ? (
               <div className="space-y-3">
                 <div className="relative w-full h-48 rounded-lg overflow-hidden border border-border/50">
-                  <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+                  <img src={bannerPreview} alt="Banner Preview" className="w-full h-full object-cover" />
                   <button
                     type="button"
-                    onClick={removeImage}
-                    className="absolute top-2 right-2 p-2 bg-destructive text-destructive-foreground rounded-full"
+                    onClick={removeBanner}
+                    className="absolute top-2 right-2 p-2 bg-destructive text-destructive-foreground rounded-full hover:opacity-90"
                   >
                     <X className="w-4 h-4" />
                   </button>
@@ -621,9 +748,47 @@ export default function CreateMarketPage() {
             ) : (
               <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-border/50 rounded-lg cursor-pointer hover:border-primary/50 bg-muted/20">
                 <Upload className="w-8 h-8 mb-2 text-muted-foreground" />
-                <span className="text-sm">Click to upload</span>
-                <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
+                <span className="text-sm">Click to upload banner</span>
+                <input type="file" accept="image/*" onChange={handleBannerUpload} className="hidden" />
               </label>
+            )}
+            {errors.banner_url && (
+              <p className="mt-1 text-sm text-destructive flex items-center gap-1">
+                <AlertCircle className="w-4 h-4" />
+                {errors.banner_url}
+              </p>
+            )}
+          </div>
+
+          {/* Logo Image Upload */}
+          <div>
+            <label className="block text-sm font-medium mb-2">Logo Image (Optional)</label>
+            <p className="text-xs text-muted-foreground mb-2">Recommended size: 200x200px (square)</p>
+            {logoPreview ? (
+              <div className="space-y-3">
+                <div className="relative w-32 h-32 rounded-lg overflow-hidden border border-border/50">
+                  <img src={logoPreview} alt="Logo Preview" className="w-full h-full object-cover" />
+                  <button
+                    type="button"
+                    onClick={removeLogo}
+                    className="absolute top-2 right-2 p-2 bg-destructive text-destructive-foreground rounded-full hover:opacity-90"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <label className="flex flex-col items-center justify-center w-32 h-32 border-2 border-dashed border-border/50 rounded-lg cursor-pointer hover:border-primary/50 bg-muted/20">
+                <Upload className="w-6 h-6 mb-2 text-muted-foreground" />
+                <span className="text-xs text-center">Click to upload logo</span>
+                <input type="file" accept="image/*" onChange={handleLogoUpload} className="hidden" />
+              </label>
+            )}
+            {errors.logo_url && (
+              <p className="mt-1 text-sm text-destructive flex items-center gap-1">
+                <AlertCircle className="w-4 h-4" />
+                {errors.logo_url}
+              </p>
             )}
           </div>
 
@@ -652,7 +817,7 @@ export default function CreateMarketPage() {
           </button>
           <button
             type="submit"
-            disabled={createMarketMutation.isPending || uploadingImage || processingPayment}
+            disabled={createMarketMutation.isPending || uploadingImages || processingPayment}
             className="px-6 py-3 gold-button rounded-lg font-semibold hover:opacity-90 disabled:opacity-50 flex items-center gap-2"
           >
             {processingPayment ? (
@@ -660,7 +825,7 @@ export default function CreateMarketPage() {
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current"></div>
                 Processing payment...
               </>
-            ) : uploadingImage ? (
+            ) : uploadingImages ? (
               <>
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current"></div>
                 Uploading...

@@ -16,6 +16,9 @@ export class MarketService {
       noPrice: market.no_price,
       category: market.category?.name || 'Other',
       custom_labels: market.custom_labels || { up: 'YES', down: 'NO' },
+      image_url: market.banner_url || market.image_url || '', // Use banner_url, fallback to image_url for backward compatibility
+      banner_url: market.banner_url || null,
+      logo_url: market.logo_url || null,
     }
   }
 
@@ -184,6 +187,9 @@ export class MarketService {
       query = query.gte('timestamp', startTime.toISOString())
     }
 
+    // Also filter out future timestamps (shouldn't happen, but safety check)
+    query = query.lte('timestamp', now.toISOString())
+
     const { data, error } = await query
 
     if (error) {
@@ -191,7 +197,12 @@ export class MarketService {
       throw error
     }
 
-    return (data || []) as MarketPriceHistory[]
+    // Ensure data is sorted by timestamp ascending
+    const sortedData = (data || []).sort((a, b) => {
+      return new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+    })
+
+    return sortedData as MarketPriceHistory[]
   }
 
   // Get categories
